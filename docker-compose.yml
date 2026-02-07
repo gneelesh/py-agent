@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  flight-agent:
+    build: .
+    container_name: flight-search-agent
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    environment:
+      - GROK_API_KEY=${GROK_API_KEY}
+      - GROK_API_BASE=${GROK_API_BASE:-https://api.x.ai/v1}
+      - DEPARTURE_AIRPORT=${DEPARTURE_AIRPORT:-IAD}
+      - DESTINATION_AIRPORT=${DESTINATION_AIRPORT:-IDR}
+      - DEPARTURE_DATE_START=${DEPARTURE_DATE_START:-2026-06-13}
+      - DEPARTURE_DATE_END=${DEPARTURE_DATE_END:-2026-06-17}
+      - RETURN_DATE_START=${RETURN_DATE_START:-2026-06-30}
+      - RETURN_DATE_END=${RETURN_DATE_END:-2026-07-05}
+      - PASSENGERS=${PASSENGERS:-1}
+      - TRAVEL_CLASS=${TRAVEL_CLASS:-economy}
+      - RUN_TIME=${RUN_TIME:-09:00}
+    restart: unless-stopped
