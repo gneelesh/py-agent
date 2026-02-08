@@ -25,7 +25,7 @@ class GrokClient:
             api_key=api_key,
             base_url=api_base
         )
-        self.model = "grok-beta"
+        self.model = "grok-3"
         logger.info("Grok client initialized")
     
     def analyze(self, prompt: str, temperature: float = 0.7) -> Dict:
@@ -70,6 +70,69 @@ class GrokClient:
             logger.error(f"Error calling Grok API: {e}", exc_info=True)
             raise
     
+    def search_flights(self, search_params: Dict) -> str:
+        """
+        Ask Grok AI to search for flights and provide recommendations.
+        
+        Args:
+            search_params: Dictionary containing search parameters
+            
+        Returns:
+            Grok's flight search results and recommendations
+        """
+        prompt = f"""
+You are a flight search assistant. Please search for flights with the following criteria:
+
+Route: {search_params['departure_airport']} to {search_params['destination_airport']}
+Departure Date Range: {search_params['departure_date_start']} to {search_params['departure_date_end']}
+Return Date Range: {search_params['return_date_start']} to {search_params['return_date_end']}
+Passengers: {search_params['passengers']}
+Class: {search_params['travel_class']}
+
+Please:
+1. Search for flights on Google Flights and Expedia for all dates in the departure range
+2. Compare the available options
+3. Find the best flight that offers the optimal combination of:
+   - Price (lower is better)
+   - Flight duration (shorter is better)
+   - Number of stops (fewer is better)
+4. Provide specific recommendations with:
+   - Exact flight details (airline, flight number, times)
+   - Price comparison across dates
+   - Why this is the best option
+   - Alternative options if available
+
+Format your response clearly with sections for:
+- Best Recommended Flight
+- Price Analysis
+- Alternative Options
+- Booking Recommendation (should we book now or wait?)
+"""
+        
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a helpful flight search assistant with access to real-time flight data. Provide detailed, accurate flight recommendations."
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                temperature=0.7
+            )
+            
+            result = response.choices[0].message.content
+            logger.info("Grok flight search completed")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error searching flights with Grok: {e}", exc_info=True)
+            return f"Error searching for flights: {str(e)}"
+    
     def summarize_flights(self, flights: list) -> str:
         """
         Get a summary of flight options.
@@ -95,3 +158,4 @@ Provide a brief summary highlighting:
         except Exception as e:
             logger.error(f"Error summarizing flights: {e}")
             return "Unable to generate summary"
+
